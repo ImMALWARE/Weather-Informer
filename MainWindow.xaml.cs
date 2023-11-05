@@ -8,6 +8,7 @@ using System.Net.Http;
 using System.Windows.Media.Imaging;
 using System.Windows.Media;
 using System.Windows.Controls;
+using System.Collections.Generic;
 
 namespace Weather_Informer
 {
@@ -60,12 +61,21 @@ namespace Weather_Informer
             connection.Close();
             return result;
         }
+
+        public static Dictionary<int, string> GetCities() {
+            Dictionary<int, string> cities = new Dictionary<int, string>();
+            connection.Open();
+            SQLiteDataReader reader = new SQLiteCommand("SELECT * FROM Cities", connection).ExecuteReader();
+            if (reader.Read()) {
+                cities.Add(Convert.ToInt32(reader[0]), reader[1].ToString());
+            }
+            connection.Close();
+            return cities;
+        }
     }
 
     public partial class MainWindow : Window
     {
-        
-
         public MainWindow() {
             if (!File.Exists(Database.path)) {
                 new AddCity().ShowDialog();
