@@ -11,6 +11,7 @@ namespace Weather_Informer
         public CityManager()
         {
             InitializeComponent();
+            CitiesList.SelectionChanged += SChangedHandler;
             foreach (KeyValuePair<int, string> city in Database.GetCities()) {
                 CitiesList.Items.Add(new TextBlock { Text = city.Value, Foreground = new SolidColorBrush(Colors.White), FontSize = 20, Tag = city.Key });
             }
@@ -18,12 +19,26 @@ namespace Weather_Informer
 
         private void SelectAction(object sender, RoutedEventArgs e)
         {
-
+            if (CitiesList.SelectedItem is TextBlock city) {
+                Data.CityID = Convert.ToInt32(city.Tag);
+                Data.CityFriendlyName = city.Text;
+                Close();
+            }
         }
 
-        private void AddNewCity(object sender, RoutedEventArgs e)
+        private void SChangedHandler(object sender, SelectionChangedEventArgs e)
         {
+            SelectButton.IsEnabled = CitiesList.SelectedItem != null;
+            SelectButton.Foreground = SelectButton.IsEnabled ? new SolidColorBrush(Colors.White) : (SolidColorBrush)(new BrushConverter().ConvertFrom("#666666"));
+        }
+
+        private void AddNewCity(object sender, RoutedEventArgs e) {
+            AddCity.SelectedCityId = 0;
             new AddCity().ShowDialog();
+            if (AddCity.SelectedCityId != 0) {
+                Database.ExecAndLeave("INSERT INTO Cities VALUES (" + AddCity.SelectedCityId.ToString() + ", \"" + AddCity.SelectedCityName + "\")");
+                CitiesList.Items.Add(new TextBlock {Text = AddCity.SelectedCityName, Foreground = new SolidColorBrush(Colors.White), FontSize = 20, Tag = AddCity.SelectedCityId});
+            }
         }
     }
 }

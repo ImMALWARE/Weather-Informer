@@ -37,13 +37,7 @@ namespace Weather_Informer
             connection = new SQLiteConnection($"Data Source={path};Version=3;");
         }
 
-        public static void ExecAndLeave(string command) {
-            connection.Open();
-            new SQLiteCommand(command, connection).ExecuteNonQuery();
-            connection.Close();
-        }
-
-        public static void ExecManyAndLeave(params string[] commands) {
+        public static void ExecAndLeave(params string[] commands) {
             connection.Open();
             foreach (string command in commands) {
                 new SQLiteCommand(command, connection).ExecuteNonQuery();
@@ -66,7 +60,7 @@ namespace Weather_Informer
             Dictionary<int, string> cities = new Dictionary<int, string>();
             connection.Open();
             SQLiteDataReader reader = new SQLiteCommand("SELECT * FROM Cities", connection).ExecuteReader();
-            if (reader.Read()) {
+            while (reader.Read()) {
                 cities.Add(Convert.ToInt32(reader[0]), reader[1].ToString());
             }
             connection.Close();
@@ -81,7 +75,7 @@ namespace Weather_Informer
                 new AddCity().ShowDialog();
                 if (AddCity.SelectedCityId == 0) Environment.Exit(1);
                 Database.Create();
-                Database.ExecManyAndLeave("INSERT INTO Cities VALUES (" + AddCity.SelectedCityId.ToString() + ", \"" + AddCity.SelectedCityName + "\")", "INSERT INTO Settings VALUES (0, \"ru\", " + AddCity.SelectedCityId.ToString() + ", 0, 1)");
+                Database.ExecAndLeave("INSERT INTO Cities VALUES (" + AddCity.SelectedCityId.ToString() + ", \"" + AddCity.SelectedCityName + "\")", "INSERT INTO Settings VALUES (0, \"ru\", " + AddCity.SelectedCityId.ToString() + ", 0, 1)");
                 Data.CityID = AddCity.SelectedCityId;
                 Data.CityFriendlyName = AddCity.SelectedCityName;
             }
@@ -165,6 +159,7 @@ namespace Weather_Informer
 
         private void CityManager(object sender, RoutedEventArgs e) {
             new CityManager().ShowDialog();
+            Refresh();
         }
         // 3) Создать фигнюшку для получения уведов
 
