@@ -40,7 +40,13 @@ namespace Weather_Informer
         public static void ExecAndLeave(params string[] commands) {
             connection.Open();
             foreach (string command in commands) {
-                new SQLiteCommand(command, connection).ExecuteNonQuery();
+                try {
+                    new SQLiteCommand(command, connection).ExecuteNonQuery();
+                } catch (SQLiteException e) {
+                    if (!e.Message.Contains("UNIQUE constraint failed")) {
+                        MessageBox.Show(e.Message, "Добавление города", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
             }
             connection.Close();
         }
@@ -94,6 +100,7 @@ namespace Weather_Informer
             current_temperature.Text = "...";
             current_description.Text = "Получение информации...";
             TheWindow.Title = "Weather Informer — В городе " + Data.CityFriendlyName + " обновление информации...";
+            city_name.Text = Data.CityFriendlyName;
             using (var httpClient = new HttpClient())
             {
                 HttpResponseMessage response = await httpClient.GetAsync("https://api.openweathermap.org/data/2.5/forecast?id=" + Data.CityID.ToString() + "&appid=" + Data.token + "&lang=ru&units=" + (Data.UseFahrenheit ? "imperial" : "metric"));

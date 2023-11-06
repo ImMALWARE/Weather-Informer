@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SQLite;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -37,8 +38,13 @@ namespace Weather_Informer
             new AddCity().ShowDialog();
             if (AddCity.SelectedCityId != 0) {
                 Database.ExecAndLeave("INSERT INTO Cities VALUES (" + AddCity.SelectedCityId.ToString() + ", \"" + AddCity.SelectedCityName + "\")");
-                CitiesList.Items.Add(new TextBlock {Text = AddCity.SelectedCityName, Foreground = new SolidColorBrush(Colors.White), FontSize = 20, Tag = AddCity.SelectedCityId});
+                if (!IsExists(AddCity.SelectedCityId)) CitiesList.Items.Add(new TextBlock {Text = AddCity.SelectedCityName, Foreground = new SolidColorBrush(Colors.White), FontSize = 20, Tag = AddCity.SelectedCityId});
             }
+        }
+
+        private bool IsExists(int city) {
+            foreach (TextBlock item in CitiesList.Items) if (item.Tag is int v && v == city) return true;
+            return false;
         }
     }
 }

@@ -33,7 +33,12 @@ namespace Weather_Informer {
                 HttpResponseMessage response = await httpClient.GetAsync("https://api.openweathermap.org/data/2.5/find?q="+SearchBox.Text+"&appid="+Data.token+"&lang=ru");
                 var result = JsonConvert.DeserializeObject<JObject>(await response.Content.ReadAsStringAsync());
                 if (result["cod"].ToString() != "200") {
-                    MessageBox.Show(result.ToString(), "Добавление города", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    if (result["message"].ToString().Equals("bad query")) {
+                        MessageBox.Show("Введите нормальный запрос!", "Добавление города", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+                    MessageBox.Show(result.ToString(), "Добавление города", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
                 }
                 
                 if (result["count"].ToString() == "0") {
