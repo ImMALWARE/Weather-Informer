@@ -3,11 +3,46 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Weather_Informer"
         mc:Ignorable="d"
-        Title="Settings" Height="450" Width="400" WindowStyle="ToolWindow" ResizeMode="NoResize">
+        Title="Weather Informer — Настройки" FontFamily="Bahnschrift" Height="295" Width="400" WindowStyle="ToolWindow" ResizeMode="NoResize" WindowStartupLocation="CenterScreen" Background="Black" Icon="/res/settings.png">
+    <Window.Resources>
+        <Style TargetType="Button">
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="BorderBrush" Value="#858585"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="BorderThickness" Value="2"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
     <Grid>
-        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center">
+        <StackPanel Margin="20,20,20,0">
+            <TextBlock Text="Измерять температуру в градусах" FontSize="16" FontWeight="Bold" Margin="0,0,0,10" Foreground="White"/>
+            <StackPanel Orientation="Horizontal">
+                <RadioButton Content="Цельсия" Margin="0,0,10,0" Foreground="White"/>
+                <RadioButton Content="Фаренгейта" Foreground="White"/>
+            </StackPanel>
+
+            <TextBlock Text="Язык интерфейса:" FontSize="16" FontWeight="Bold" Margin="0,10,0,10" Foreground="White"/>
+            <StackPanel Orientation="Horizontal">
+                <RadioButton Content="Русский" Margin="0,0,10,0" Foreground="White"/>
+                <RadioButton Content="Английский" Foreground="White"/>
+            </StackPanel>
+            <CheckBox Content="Запускать приложение при запуске системы" FontSize="14" FontWeight="Bold" Margin="0,10,0,0" Foreground="White"/>
+            <CheckBox Content="Включить уведомления" FontSize="16" FontWeight="Bold" Margin="0,10,0,0" Foreground="White"/>
+            <TextBlock Text="Если включено, приложение будет сворачиваться в трей при закрытии" FontSize="12" FontStyle="Italic" Margin="0,0,0,10" TextWrapping="Wrap" Foreground="White"/>
+            <Button Content="Сохранить" Width="120" Height="35" FontSize="20" HorizontalAlignment="Center" Background="#333333" Foreground="White"/>
         </StackPanel>
     </Grid>
 </Window>

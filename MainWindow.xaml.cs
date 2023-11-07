@@ -18,6 +18,8 @@ namespace Weather_Informer
         public static bool UseFahrenheit = false;
         public static int CityID = 0;
         public static string CityFriendlyName = null;
+        public static string language = "ru";
+        public static bool tray = false;
     }
 
     public static class Database {
@@ -27,10 +29,8 @@ namespace Weather_Informer
         public static void Create() {
             SQLiteConnection.CreateFile(path);
             Init();
-            connection.Open();
-            new SQLiteCommand("CREATE TABLE IF NOT EXISTS Cities (id INTEGER UNIQUE PRIMARY KEY, FriendlyName VARCHAR)", connection).ExecuteNonQuery();
-            new SQLiteCommand("CREATE TABLE IF NOT EXISTS Settings (UseFahrenheit BOOLEAN, Language VARCHAR(2), CurrentCity INTEGER, NotificationsEnabled BOOLEAN, MinimizeToTray BOOLEAN, FOREIGN KEY (CurrentCity) REFERENCES Cities(id))", connection).ExecuteNonQuery();
-            connection.Close();
+            ExecAndLeave("CREATE TABLE IF NOT EXISTS Cities (id INTEGER UNIQUE PRIMARY KEY, FriendlyName VARCHAR)",
+                "CREATE TABLE IF NOT EXISTS Settings (UseFahrenheit BOOLEAN, Language VARCHAR(2), CurrentCity INTEGER, NotificationsEnabled BOOLEAN, FOREIGN KEY (CurrentCity) REFERENCES Cities(id))");
         }
 
         public static void Init() {
@@ -44,7 +44,7 @@ namespace Weather_Informer
                     new SQLiteCommand(command, connection).ExecuteNonQuery();
                 } catch (SQLiteException e) {
                     if (!e.Message.Contains("UNIQUE constraint failed")) {
-                        MessageBox.Show(e.Message, "Добавление города", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show(e.Message, "Ошибка базы данных!", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
             }
@@ -85,8 +85,8 @@ namespace Weather_Informer
                 Data.CityID = AddCity.SelectedCityId;
                 Data.CityFriendlyName = AddCity.SelectedCityName;
             }
-
             else Database.Init();
+            // TODO: get settings and set them to data class
             InitializeComponent();
             if (Data.CityID == 0) Data.CityID = Convert.ToInt32(Database.ExecAndReturn("SELECT CurrentCity FROM Settings", "CurrentCity"));
             if (Data.CityFriendlyName == null) Data.CityFriendlyName = Database.ExecAndReturn("SELECT FriendlyName FROM Cities WHERE id = " + Data.CityID.ToString(), "FriendlyName");
@@ -103,7 +103,7 @@ namespace Weather_Informer
             city_name.Text = Data.CityFriendlyName;
             using (var httpClient = new HttpClient())
             {
-                HttpResponseMessage response = await httpClient.GetAsync("https://api.openweathermap.org/data/2.5/forecast?id=" + Data.CityID.ToString() + "&appid=" + Data.token + "&lang=ru&units=" + (Data.UseFahrenheit ? "imperial" : "metric"));
+                HttpResponseMessage response = await httpClient.GetAsync("https://api.openweathermap.org/data/2.5/forecast?id=" + Data.CityID.ToString() + "&appid=" + Data.token + "&lang="+Data.language+"&units=" + (Data.UseFahrenheit ? "imperial" : "metric"));
                 var result = JsonConvert.DeserializeObject<JObject>(await response.Content.ReadAsStringAsync());
                 if (Data.CityFriendlyName != result["city"]["name"].ToString()) {
                     Data.CityFriendlyName = result["city"]["name"].ToString();
@@ -135,8 +135,6 @@ namespace Weather_Informer
                     }
                     catch { }
                 }
-
-                //MessageBox.Show(result.ToString(), "Debug", MessageBoxButton.OK);
 
                 for (int e = 0; e <= 40; e++) {
                     TextBlock t = (TextBlock)FindName("t"+e.ToString());

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.SQLite;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -23,6 +22,7 @@ namespace Weather_Informer
             if (CitiesList.SelectedItem is TextBlock city) {
                 Data.CityID = Convert.ToInt32(city.Tag);
                 Data.CityFriendlyName = city.Text;
+                Database.ExecAndLeave("UPDATE Settings SET CurrentCity = " + Data.CityID);
                 Close();
             }
         }
