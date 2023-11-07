@@ -9,10 +9,12 @@ using System.Windows.Input;
 
 namespace Weather_Informer {
     public partial class AddCity : Window {
-        public static int SelectedCityId = 0;
-        public static string SelectedCityName = null;
+        public static int SelectedCityId;
+        public static string SelectedCityName;
 
         public AddCity() {
+            SelectedCityId = 0;
+            SelectedCityName = null;
             InitializeComponent();
             SearchResults.SelectionChanged += SChangedHandler;
             PreviewKeyDown += new KeyEventHandler((object sender, KeyEventArgs e) => {if (e.Key == Key.Escape) Close();});
