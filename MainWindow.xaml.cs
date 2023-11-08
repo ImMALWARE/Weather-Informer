@@ -15,11 +15,11 @@ namespace Weather_Informer
     public static class Data
     {
         public static readonly string token = "2a605935cb485e63d8657f2f7c2774e9";
-        public static bool UseFahrenheit = false;
-        public static int CityID = 0;
-        public static string CityFriendlyName = null;
-        public static string language = "ru";
-        public static bool tray = false;
+        public static bool UseFahrenheit;
+        public static int CityID;
+        public static string CityFriendlyName;
+        public static string language;
+        public static bool tray;
     }
 
     public static class Database {
@@ -72,6 +72,17 @@ namespace Weather_Informer
             connection.Close();
             return cities;
         }
+
+        public static string[] GetSettings() {
+            string[] settings = new string[4];
+            connection.Open();
+            SQLiteDataReader reader = new SQLiteCommand("SELECT * FROM Settings", connection).ExecuteReader();
+            if (reader.Read()) {
+                settings = new string[4] {reader[0].ToString(), reader[1].ToString(), reader[2].ToString(), reader[3].ToString()};
+            }
+            connection.Close();
+            return settings;
+        }
     }
 
     public partial class MainWindow : Window
@@ -81,15 +92,24 @@ namespace Weather_Informer
                 new AddCity().ShowDialog();
                 if (AddCity.SelectedCityId == 0) Environment.Exit(1);
                 Database.Create();
-                Database.ExecAndLeave("INSERT INTO Cities VALUES (" + AddCity.SelectedCityId.ToString() + ", \"" + AddCity.SelectedCityName + "\")", "INSERT INTO Settings VALUES (0, \"ru\", " + AddCity.SelectedCityId.ToString() + ", 0, 1)");
+                Database.ExecAndLeave("INSERT INTO Cities VALUES (" + AddCity.SelectedCityId.ToString() + ", \"" + AddCity.SelectedCityName + "\")",
+                    "INSERT INTO Settings VALUES (0, \"ru\", " + AddCity.SelectedCityId.ToString() + ", 0)");
+                Data.UseFahrenheit = false;
+                Data.language = "ru";
                 Data.CityID = AddCity.SelectedCityId;
+                Data.tray = false;
                 Data.CityFriendlyName = AddCity.SelectedCityName;
             }
-            else Database.Init();
-            // TODO: get settings and set them to data class
+            else {
+                Database.Init();
+                string[] settings = Database.GetSettings();
+                Data.UseFahrenheit = Convert.ToBoolean(settings[0]);
+                Data.language = settings[1];
+                Data.CityID = Convert.ToInt32(settings[2]);
+                Data.tray = Convert.ToBoolean(settings[3]);
+                Data.CityFriendlyName = Database.ExecAndReturn("SELECT FriendlyName FROM Cities WHERE id = " + Data.CityID.ToString(), "FriendlyName");
+            }
             InitializeComponent();
-            if (Data.CityID == 0) Data.CityID = Convert.ToInt32(Database.ExecAndReturn("SELECT CurrentCity FROM Settings", "CurrentCity"));
-            if (Data.CityFriendlyName == null) Data.CityFriendlyName = Database.ExecAndReturn("SELECT FriendlyName FROM Cities WHERE id = " + Data.CityID.ToString(), "FriendlyName");
             city_name.Text = Data.CityFriendlyName;
             TheWindow.Title = "Weather Informer — В городе " + Data.CityFriendlyName + " обновление информации...";
             Refresh();

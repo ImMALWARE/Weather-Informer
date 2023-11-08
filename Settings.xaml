@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="Weather Informer — Настройки" FontFamily="Bahnschrift" Height="295" Width="400" WindowStyle="ToolWindow" ResizeMode="NoResize" WindowStartupLocation="CenterScreen" Background="Black" Icon="/res/settings.png">
+        Title="Weather Informer — Настройки" FontFamily="Bahnschrift" Height="270" Width="400" WindowStyle="ToolWindow" ResizeMode="NoResize" WindowStartupLocation="CenterScreen" Background="Black" Icon="/res/settings.png">
     <Window.Resources>
         <Style TargetType="Button">
             <Setter Property="BorderThickness" Value="0"/>
@@ -30,16 +30,15 @@
         <StackPanel Margin="20,20,20,0">
             <TextBlock Text="Измерять температуру в градусах" FontSize="16" FontWeight="Bold" Margin="0,0,0,10" Foreground="White"/>
             <StackPanel Orientation="Horizontal">
-                <RadioButton Content="Цельсия" Margin="0,0,10,0" Foreground="White"/>
-                <RadioButton Content="Фаренгейта" Foreground="White"/>
+                <RadioButton x:Name="C"  Content="Цельсия" Margin="0,0,10,0" Foreground="White"/>
+                <RadioButton x:Name="F" Content="Фаренгейта" Foreground="White"/>
             </StackPanel>
 
             <TextBlock Text="Язык интерфейса:" FontSize="16" FontWeight="Bold" Margin="0,10,0,10" Foreground="White"/>
             <StackPanel Orientation="Horizontal">
-                <RadioButton Content="Русский" Margin="0,0,10,0" Foreground="White"/>
-                <RadioButton Content="Английский" Foreground="White"/>
+                <RadioButton x:Name="ru" Content="Русский" Margin="0,0,10,0" Foreground="White"/>
+                <RadioButton x:Name="en" Content="Английский" Foreground="White"/>
             </StackPanel>
-            <CheckBox Content="Запускать приложение при запуске системы" FontSize="14" FontWeight="Bold" Margin="0,10,0,0" Foreground="White"/>
             <CheckBox Content="Включить уведомления" FontSize="16" FontWeight="Bold" Margin="0,10,0,0" Foreground="White"/>
             <TextBlock Text="Если включено, приложение будет сворачиваться в трей при закрытии" FontSize="12" FontStyle="Italic" Margin="0,0,0,10" TextWrapping="Wrap" Foreground="White"/>
             <Button Content="Сохранить" Width="120" Height="35" FontSize="20" HorizontalAlignment="Center" Background="#333333" Foreground="White"/>

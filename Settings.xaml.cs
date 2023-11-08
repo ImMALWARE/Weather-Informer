@@ -7,7 +7,11 @@ namespace Weather_Informer
         public Settings()
         {
             InitializeComponent();
-            // TODO: put settings, they are in data class
+            C.IsChecked = !Data.UseFahrenheit;
+            F.IsChecked = Data.UseFahrenheit;
+            ru.IsChecked = Data.language.Equals("ru");
+            en.IsChecked = Data.language.Equals("en");
+            //tray.IsChecked = 
         }
     }
 }
