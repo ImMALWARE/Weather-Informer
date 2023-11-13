@@ -47,7 +47,7 @@ namespace Weather_Informer {
                 }
                 var result = JsonConvert.DeserializeObject<JObject>(await response.Content.ReadAsStringAsync());
                 if (result["cod"].ToString() != "200") {
-                    if (result["message"].ToString().Equals("Nothing to geocode")) {
+                    if (result["message"].ToString().Equals("Nothing to geocode") || result["message"].ToString().Equals("bad query")) {
                         MessageBox.Show(Strings.get("STUPID_REQUEST", Data.language), Strings.get("ADDING_CITY", Data.language), MessageBoxButton.OK, MessageBoxImage.Warning);
                         return;
                     }

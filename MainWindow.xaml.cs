@@ -92,13 +92,13 @@ namespace Weather_Informer
     {
         public MainWindow() {
             if (!File.Exists(Database.path)) {
+                Data.language = "ru";
                 new AddCity().ShowDialog();
                 if (AddCity.SelectedCityId == 0) Environment.Exit(1);
                 Database.Create();
                 Database.ExecAndLeave("INSERT INTO Cities VALUES (" + AddCity.SelectedCityId.ToString() + ", \"" + AddCity.SelectedCityName + "\")",
                     "INSERT INTO Settings VALUES (0, \"ru\", " + AddCity.SelectedCityId.ToString() + ", 0)");
                 Data.UseFahrenheit = false;
-                Data.language = "ru";
                 Data.CityID = AddCity.SelectedCityId;
                 Data.tray = false;
                 Data.CityFriendlyName = AddCity.SelectedCityName;
