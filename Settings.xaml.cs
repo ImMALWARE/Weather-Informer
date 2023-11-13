@@ -16,7 +16,6 @@ namespace Weather_Informer
                 ru.Content = "Russian";
                 en.Content = "English";
                 tray.Content = "Enable notifications";
-                NotificationsHint.Text = "If enabled, app will be minimized in tray when closed";
                 save.Content = "Save";
             }
             C.IsChecked = !Data.UseFahrenheit;
