@@ -16,6 +16,12 @@ namespace Weather_Informer {
             SelectedCityId = 0;
             SelectedCityName = null;
             InitializeComponent();
+            if (Data.language == "en") {
+                TheWindow.Title = "Weather Informer - Adding new city";
+                ChooseCity.Text = "Search for city name";
+                SelectButton.Content = "Add";
+            }
+            
             SearchResults.SelectionChanged += SChangedHandler;
             PreviewKeyDown += new KeyEventHandler((object sender, KeyEventArgs e) => {if (e.Key == Key.Escape) Close();});
         }
@@ -32,19 +38,25 @@ namespace Weather_Informer {
             SelectButton.IsEnabled = false;
             SearchResults.Items.Clear();
             using (var httpClient = new HttpClient()) {
-                HttpResponseMessage response = await httpClient.GetAsync("https://api.openweathermap.org/data/2.5/find?q="+SearchBox.Text+"&appid="+Data.token+"&lang=ru");
+                HttpResponseMessage response = null;
+                try {
+                    response = await httpClient.GetAsync("https://api.openweathermap.org/data/2.5/find?q=" + SearchBox.Text + "&appid=" + Data.token + "&lang=ru");
+                } catch (HttpRequestException) {
+                    if (MessageBox.Show(Strings.get("INTERNET_ERROR_CONTENT", Data.language), Strings.get("INTERNET_ERROR_TITLE", Data.language), MessageBoxButton.YesNo, MessageBoxImage.Error) == MessageBoxResult.Yes) System.Diagnostics.Process.Start("https://malw.ru/pages/other#warp");
+                    return;
+                }
                 var result = JsonConvert.DeserializeObject<JObject>(await response.Content.ReadAsStringAsync());
                 if (result["cod"].ToString() != "200") {
-                    if (result["message"].ToString().Equals("bad query")) {
-                        MessageBox.Show("Введите нормальный запрос!", "Добавление города", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    if (result["message"].ToString().Equals("Nothing to geocode")) {
+                        MessageBox.Show(Strings.get("STUPID_REQUEST", Data.language), Strings.get("ADDING_CITY", Data.language), MessageBoxButton.OK, MessageBoxImage.Warning);
                         return;
                     }
-                    MessageBox.Show(result.ToString(), "Добавление города", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show(result.ToString(), Strings.get("ADDING_CITY", Data.language), MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
                 
                 if (result["count"].ToString() == "0") {
-                    MessageBox.Show("Не найдены города по этому запросу!", "Добавление города", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show(Strings.get("NOTHING_FOUND", Data.language), Strings.get("ADDING_CITY", Data.language), MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
                 foreach (var city in result["list"]) {

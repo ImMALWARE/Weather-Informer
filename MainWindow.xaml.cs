@@ -9,6 +9,10 @@ using System.Windows.Media.Imaging;
 using System.Windows.Media;
 using System.Windows.Controls;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Timers;
+using Windows.UI.Notifications;
+using Windows.Data.Xml.Dom;
 
 namespace Weather_Informer
 {
@@ -44,7 +48,7 @@ namespace Weather_Informer
                     new SQLiteCommand(command, connection).ExecuteNonQuery();
                 } catch (SQLiteException e) {
                     if (!e.Message.Contains("UNIQUE constraint failed")) {
-                        MessageBox.Show(e.Message, "Ошибка базы данных!", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show(e.Message, Strings.get("DB_ERROR", Data.language), MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
             }
@@ -84,7 +88,6 @@ namespace Weather_Informer
             return settings;
         }
     }
-
     public partial class MainWindow : Window
     {
         public MainWindow() {
@@ -111,19 +114,37 @@ namespace Weather_Informer
             }
             InitializeComponent();
             city_name.Text = Data.CityFriendlyName;
-            TheWindow.Title = "Weather Informer — В городе " + Data.CityFriendlyName + " обновление информации...";
+            TheWindow.Title = Strings.get("TITLE", Data.language).Replace("%city%", Data.CityFriendlyName).Replace("%info%", Strings.get("REFRESHING", Data.language));
             Refresh();
+            Timer timer = new Timer(3600000);
+            timer.Elapsed += RefreshTask;
+            timer.AutoReset = true;
+            timer.Start();
+        }
+
+        private void RefreshTask(object sender, ElapsedEventArgs e) {
+            Dispatcher.Invoke(() => { Refresh(); });
         }
 
         async void Refresh() {
             RefreshButton.IsEnabled = false;
             current_temperature.Text = "...";
-            current_description.Text = "Получение информации...";
-            TheWindow.Title = "Weather Informer — В городе " + Data.CityFriendlyName + " обновление информации...";
+            current_description.Text = Strings.get("GETTING", Data.language);
+            TheWindow.Title = Strings.get("TITLE", Data.language).Replace("%city%", Data.CityFriendlyName).Replace("%info%", Strings.get("REFRESHING", Data.language));
             city_name.Text = Data.CityFriendlyName;
-            using (var httpClient = new HttpClient())
-            {
-                HttpResponseMessage response = await httpClient.GetAsync("https://api.openweathermap.org/data/2.5/forecast?id=" + Data.CityID.ToString() + "&appid=" + Data.token + "&lang="+Data.language+"&units=" + (Data.UseFahrenheit ? "imperial" : "metric"));
+            using (var httpClient = new HttpClient()) {
+                HttpResponseMessage response = null;
+                try {
+                    response = await httpClient.GetAsync("https://api.openweathermap.org/data/2.5/forecast?id=" + Data.CityID.ToString() + "&appid=" + Data.token + "&lang=" + Data.language + "&units=" + (Data.UseFahrenheit ? "imperial" : "metric"));
+                } catch (HttpRequestException)
+                {
+                    if (MessageBox.Show(Strings.get("INTERNET_ERROR_CONTENT", Data.language), Strings.get("INTERNET_ERROR_TITLE", Data.language), MessageBoxButton.YesNo, MessageBoxImage.Error) == MessageBoxResult.Yes) System.Diagnostics.Process.Start("https://malw.ru/pages/other#warp");
+                    RefreshButton.IsEnabled = true;
+                    TheWindow.Title = Strings.get("ERROR_TITLE", Data.language);
+                    current_temperature.Text = ":(";
+                    return;
+                }
+
                 var result = JsonConvert.DeserializeObject<JObject>(await response.Content.ReadAsStringAsync());
                 if (Data.CityFriendlyName != result["city"]["name"].ToString()) {
                     Data.CityFriendlyName = result["city"]["name"].ToString();
@@ -133,23 +154,29 @@ namespace Weather_Informer
 
                 string units = Data.UseFahrenheit ? "F" : "C";
                 current_temperature.Text = Convert.ToInt32(result["list"][0]["main"]["temp"]).ToString() + "°" + units;
-                current_description.Text = result["list"][0]["weather"][0]["description"].ToString() + ". Ощущается как " + Convert.ToInt32(result["list"][0]["main"]["feels_like"]).ToString() + "°" + units;
+                current_description.Text = result["list"][0]["weather"][0]["description"].ToString() + Strings.get("FEELS_LIKE", Data.language) + Convert.ToInt32(result["list"][0]["main"]["feels_like"]).ToString() + "°" + units;
                 current_description.Text = char.ToUpper(current_description.Text[0]) + current_description.Text.Substring(1);
                 TheWindow.Icon = new BitmapImage(new Uri("pack://application:,,,/res/" + result["list"][0]["weather"][0]["icon"].ToString().Substring(0, 2) + ".ico"));
                 current_icon.Source = new BitmapImage(new Uri("pack://application:,,,/res/" + result["list"][0]["weather"][0]["icon"].ToString().Substring(0, 2) + ".png"));
-                TheWindow.Title = "Weather Informer — В городе " + Data.CityFriendlyName + " " + result["list"][0]["weather"][0]["description"].ToString() + ", " + current_temperature.Text + " (" + Convert.ToInt32(result["list"][0]["main"]["feels_like"]).ToString() + "°" + units + ")";
+                TheWindow.Title = Strings.get("TITLE", Data.language).Replace("%city%", Data.CityFriendlyName).Replace("%info%", result["list"][0]["weather"][0]["description"].ToString() + ", " + current_temperature.Text + " (" + Convert.ToInt32(result["list"][0]["main"]["feels_like"]).ToString() + "°" + units + ")");
                 TheWindow.Background = new ImageBrush(new BitmapImage(new Uri("pack://application:,,,/res/" + result["list"][0]["weather"][0]["icon"].ToString().Substring(0, 2) + ".jpg")));
 
+                if (Data.tray) {
+                    ShowNotification(Strings.get("NOTIFICATION_TITLE", Data.language).Replace("%city%", Data.CityFriendlyName).Replace("%temp%", current_temperature.Text), current_description.Text, result["list"][0]["weather"][0]["icon"].ToString().Substring(0, 2));
+                }
+
+                if (Data.language.Equals("en")) tomorrow.Text = "Tomorrow";
                 JArray Forecast = (JArray)result["list"];
                 JArray NotTodayFC = new JArray();
+
                 foreach (JToken e in Forecast) if (DateTimeOffset.FromUnixTimeSeconds(Convert.ToInt32(e["dt"])).DateTime.Date != DateTime.Today) NotTodayFC.Add(e);
 
-                foreach (int d in new int[] {8, 16, 24, 32, 40})
+                foreach (int d in new int[] { 8, 16, 24, 32, 40 })
                 {
                     TextBlock t = (TextBlock)FindName("d" + d.ToString());
                     Grid g = (Grid)FindName("c" + d.ToString());
-                    try { 
-                        t.Text = DateTimeOffset.FromUnixTimeSeconds(Convert.ToInt32(NotTodayFC[d]["dt"])).Date.ToString("dddd, d MMMM");
+                    try {
+                        t.Text = DateTimeOffset.FromUnixTimeSeconds(Convert.ToInt32(NotTodayFC[d]["dt"])).Date.ToString("dddd, d MMMM", new CultureInfo((Data.language)));
                         t.Visibility = Visibility.Visible;
                         g.Visibility = Visibility.Visible;
                     }
@@ -157,7 +184,7 @@ namespace Weather_Informer
                 }
 
                 for (int e = 0; e <= 40; e++) {
-                    TextBlock t = (TextBlock)FindName("t"+e.ToString());
+                    TextBlock t = (TextBlock)FindName("t" + e.ToString());
                     Image i = (Image)FindName("i" + e.ToString());
                     try {
                         t.Text = NotTodayFC[e]["main"]["temp"].ToString() + "°" + units;
@@ -169,7 +196,7 @@ namespace Weather_Informer
                     catch {
                         t.Text = "???";
                         i.Source = new BitmapImage(new Uri("pack://application:,,,/res/unknown.png"));
-                        i.ToolTip = "Неизвестно";
+                        i.ToolTip = Strings.get("UNKNOWN", Data.language);
                     }
                 }
             }
@@ -180,19 +207,22 @@ namespace Weather_Informer
 
         private void OpenSettings(object sender, RoutedEventArgs e) {
             new Settings().ShowDialog();
+            Refresh();
         }
 
         private void CityManager(object sender, RoutedEventArgs e) {
             new CityManager().ShowDialog();
             Refresh();
         }
-        // 3) Создать фигнюшку для получения уведов
 
-
-        // Настройки:
-        // 1) Цельсий/фаренгейт
-        // 2) Язык - если будет не лень
-        // 3) Запуск при старте
-        // 4) Вкл/выкл уведы
+        private void ShowNotification(string title, string content, string image)
+        {
+            XmlDocument toastXml = ToastNotificationManager.GetTemplateContent(ToastTemplateType.ToastImageAndText03);
+            XmlNodeList stringElements = toastXml.GetElementsByTagName("text");
+            stringElements[0].AppendChild(toastXml.CreateTextNode(title));
+            stringElements[1].AppendChild(toastXml.CreateTextNode(content));
+            toastXml.GetElementsByTagName("image")[0].Attributes.GetNamedItem("src").NodeValue = "file:///" + Path.GetFullPath("res/" + image + ".png");
+            ToastNotificationManager.CreateToastNotifier("Weather Informer").Show(new ToastNotification(toastXml));
+        }
     }
 }

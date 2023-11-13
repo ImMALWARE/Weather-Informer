@@ -11,6 +11,12 @@ namespace Weather_Informer
         public CityManager()
         {
             InitializeComponent();
+            if (Data.language == "en") {
+                TheWindow.Title = "Weather Informer - Choosing city";
+                SelectButton.Content = "Select";
+                AddButton.Content = "Add new";  
+                ChooseCity.Text = "Choose a city";
+            }
             CitiesList.SelectionChanged += SChangedHandler;
             foreach (KeyValuePair<int, string> city in Database.GetCities()) {
                 CitiesList.Items.Add(new TextBlock { Text = city.Value, Foreground = new SolidColorBrush(Colors.White), FontSize = 20, Tag = city.Key });
