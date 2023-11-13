@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" x:Name="TheWindow"
-        Title="Weather Informer — Настройки" FontFamily="Bahnschrift" Height="270" Width="400" WindowStyle="ToolWindow" ResizeMode="NoResize" WindowStartupLocation="CenterScreen" Background="Black" Icon="/res/settings.png">
+        Title="Weather Informer — Настройки" FontFamily="Bahnschrift" Height="240" Width="400" WindowStyle="ToolWindow" ResizeMode="NoResize" WindowStartupLocation="CenterScreen" Background="Black" Icon="/res/settings.png">
     <Window.Resources>
         <Style TargetType="Button">
             <Setter Property="BorderThickness" Value="0"/>
@@ -39,7 +39,7 @@
                 <RadioButton x:Name="ru" Content="Русский" Margin="0,0,10,0" Foreground="White"/>
                 <RadioButton x:Name="en" Content="Английский" Foreground="White"/>
             </StackPanel>
-            <CheckBox x:Name="tray" Content="Включить уведомления" FontSize="16" FontWeight="Bold" Margin="0,10,0,0" Foreground="White"/>
+            <CheckBox x:Name="tray" Content="Включить уведомления" FontSize="16" FontWeight="Bold" Margin="0,10,0,15" Foreground="White"/>
             <Button x:Name="save" Content="Сохранить" Width="120" Height="35" FontSize="20" HorizontalAlignment="Center" Background="#333333" Foreground="White" Click="Save"/>
         </StackPanel>
     </Grid>
