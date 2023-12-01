@@ -138,7 +138,7 @@ namespace Weather_Informer
                     response = await httpClient.GetAsync("https://api.openweathermap.org/data/2.5/forecast?id=" + Data.CityID.ToString() + "&appid=" + Data.token + "&lang=" + Data.language + "&units=" + (Data.UseFahrenheit ? "imperial" : "metric"));
                 } catch (HttpRequestException)
                 {
-                    if (MessageBox.Show(Strings.get("INTERNET_ERROR_CONTENT", Data.language), Strings.get("INTERNET_ERROR_TITLE", Data.language), MessageBoxButton.YesNo, MessageBoxImage.Error) == MessageBoxResult.Yes) System.Diagnostics.Process.Start("https://malw.ru/pages/other#warp");
+                    if (MessageBox.Show(Strings.get("INTERNET_ERROR_CONTENT", Data.language), Strings.get("INTERNET_ERROR_TITLE", Data.language), MessageBoxButton.YesNo, MessageBoxImage.Error) == MessageBoxResult.Yes) System.Diagnostics.Process.Start("https://zelenka.guru/threads/4807721/");
                     RefreshButton.IsEnabled = true;
                     TheWindow.Title = Strings.get("ERROR_TITLE", Data.language);
                     current_temperature.Text = ":(";

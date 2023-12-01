@@ -69,5 +69,26 @@ namespace Weather_Informer {
             SelectButton.Foreground = SelectButton.IsEnabled ? new SolidColorBrush(Colors.White) : (SolidColorBrush)(new BrushConverter().ConvertFrom("#666666"));
         }
 
+        private async void AutoLocation(object sender, RoutedEventArgs e)
+        {
+            SelectButton.IsEnabled = false;
+            SearchResults.Items.Clear();
+            using (var httpClient = new HttpClient())
+            {
+                HttpResponseMessage response = null;
+                try
+                {
+                    response = await httpClient.GetAsync("https://ipinfo.io");
+                }
+                catch (HttpRequestException)
+                {
+                    if (MessageBox.Show(Strings.get("INTERNET_ERROR_CONTENT", Data.language), Strings.get("INTERNET_ERROR_TITLE", Data.language), MessageBoxButton.YesNo, MessageBoxImage.Error) == MessageBoxResult.Yes) System.Diagnostics.Process.Start("https://zelenka.guru/threads/4807721/");
+                    return;
+                }
+                var result = JsonConvert.DeserializeObject<JObject>(await response.Content.ReadAsStringAsync());
+                SearchBox.Text = result["city"].ToString() + ", " + result["country"].ToString();
+                Search(sender, e);
+            }
+        }
     }
 }

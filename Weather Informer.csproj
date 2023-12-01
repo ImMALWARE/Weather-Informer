@@ -222,5 +222,8 @@
       <Version>1.0.118</Version>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="res\location.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
