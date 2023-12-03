@@ -13,6 +13,10 @@ using System.Globalization;
 using System.Timers;
 using Windows.UI.Notifications;
 using Windows.Data.Xml.Dom;
+using System.Windows.Forms;
+using Timer = System.Timers.Timer;
+using MessageBox = System.Windows.MessageBox;
+using System.Drawing;
 
 namespace Weather_Informer
 {
@@ -88,8 +92,8 @@ namespace Weather_Informer
             return settings;
         }
     }
-    public partial class MainWindow : Window
-    {
+    public partial class MainWindow : Window {
+        NotifyIcon notifyIcon = null;
         public MainWindow() {
             if (!File.Exists(Database.path)) {
                 Data.language = "ru";
@@ -116,6 +120,7 @@ namespace Weather_Informer
             city_name.Text = Data.CityFriendlyName;
             TheWindow.Title = Strings.get("TITLE", Data.language).Replace("%city%", Data.CityFriendlyName).Replace("%info%", Strings.get("REFRESHING", Data.language));
             Refresh();
+            Closing += OnClose;
             Timer timer = new Timer(3600000);
             timer.Elapsed += RefreshTask;
             timer.AutoReset = true;
@@ -127,6 +132,7 @@ namespace Weather_Informer
         }
 
         async void Refresh() {
+            JObject result;
             RefreshButton.IsEnabled = false;
             current_temperature.Text = "...";
             current_description.Text = Strings.get("GETTING", Data.language);
@@ -145,7 +151,7 @@ namespace Weather_Informer
                     return;
                 }
 
-                var result = JsonConvert.DeserializeObject<JObject>(await response.Content.ReadAsStringAsync());
+                result = JsonConvert.DeserializeObject<JObject>(await response.Content.ReadAsStringAsync());
                 if (Data.CityFriendlyName != result["city"]["name"].ToString()) {
                     Data.CityFriendlyName = result["city"]["name"].ToString();
                     city_name.Text = Data.CityFriendlyName;
@@ -185,7 +191,7 @@ namespace Weather_Informer
 
                 for (int e = 0; e <= 40; e++) {
                     TextBlock t = (TextBlock)FindName("t" + e.ToString());
-                    Image i = (Image)FindName("i" + e.ToString());
+                    System.Windows.Controls.Image i = (System.Windows.Controls.Image)FindName("i" + e.ToString());
                     try {
                         t.Text = NotTodayFC[e]["main"]["temp"].ToString() + "°" + units;
                         i.Source = new BitmapImage(new Uri("pack://application:,,,/res/" + NotTodayFC[e]["weather"][0]["icon"].ToString().Substring(0, 2) + ".png"));
@@ -201,6 +207,34 @@ namespace Weather_Informer
                 }
             }
             RefreshButton.IsEnabled = true;
+            if (Data.tray) {
+                if (notifyIcon == null) {
+                    notifyIcon = new NotifyIcon {
+                        Visible = true,
+                        ContextMenuStrip = new ContextMenuStrip {
+                            Items = {
+                                new ToolStripMenuItem("Открыть приложение", null, (s, e) => { Show(); WindowState = WindowState.Normal; }),
+                                new ToolStripMenuItem("Обновить информацию", null, (s, e) => Refresh()),
+                                new ToolStripMenuItem("Сменить город", null, (s, e) => { new CityManager().ShowDialog(); Refresh(); }),
+                                new ToolStripMenuItem("Закрыть приложение", null, (s, e) => { notifyIcon.Dispose(); Environment.Exit(0); })
+                            }
+                        }
+                    };
+                    notifyIcon.ContextMenuStrip.Items[0].Font = new Font(notifyIcon.ContextMenuStrip.Font, System.Drawing.FontStyle.Bold);
+                    notifyIcon.MouseClick += (s, e) => {
+                        if (e.Button == MouseButtons.Left) {
+                            Show();
+                            WindowState = WindowState.Normal;
+                        }
+                    };
+                }
+                notifyIcon.Icon = new Icon(new FileStream("res/" + result["list"][0]["weather"][0]["icon"].ToString().Substring(0, 2) + ".ico", FileMode.Open));
+                notifyIcon.Text = TheWindow.Title.Length >= 64 ? TheWindow.Title.Substring(0, 63) : TheWindow.Title;
+            }
+            else {
+                notifyIcon?.Dispose();
+                notifyIcon = null;
+            }
         }
 
         private void Refresh(object sender, RoutedEventArgs e) { Refresh(); }
@@ -223,6 +257,13 @@ namespace Weather_Informer
             stringElements[1].AppendChild(toastXml.CreateTextNode(content));
             toastXml.GetElementsByTagName("image")[0].Attributes.GetNamedItem("src").NodeValue = "file:///" + Path.GetFullPath("res/" + image + ".png");
             ToastNotificationManager.CreateToastNotifier("Weather Informer").Show(new ToastNotification(toastXml));
+        }
+
+        public void OnClose(object sender, System.ComponentModel.CancelEventArgs e) {
+            if (Data.tray) {
+                e.Cancel = true;
+                Hide();
+            }
         }
     }
 }
